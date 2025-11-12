@@ -44,10 +44,16 @@ app.post("/countdowns", async (req, res) => {
 
 app.put("/countdowns", async (req, res) => {
   console.log("put request received for ID:", req.query.id);
+  const { name, deadline } = req.body;
+  const id = req.query.id;
   try {
     await pool.query(
-      `UPDATE countdowns.countdowns SET name='${req.body.name}', deadline='${req.body.deadline}' WHERE id=${req.query.id}`
+      `UPDATE countdowns.countdowns
+       SET name = $1, deadline = $2
+       WHERE id = $3`,
+      [name, deadline, id] // ✅ safely passed as parameters
     );
+
     res.send(`Update countdown with ID ${req.query.id}`);
   } catch (err) {
     console.error(err);

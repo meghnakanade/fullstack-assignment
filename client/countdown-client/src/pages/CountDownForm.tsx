@@ -1,65 +1,32 @@
 import React, { useState } from "react";
-import { TextField, Button, Stack } from "@mui/material";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 
-export default function CountdownForm() {
-  const [name, setName] = useState("");
-  const [deadline, setDeadline] = useState(dayjs()); // default now
+export default function CountDownForm({
+  name = "",
+  deadline = dayjs(),
+  onSubmit,
+}: {
+  name?: string;
+  deadline?: Dayjs;
+  onSubmit: (data: { name: string; deadline: Dayjs }) => void;
+}) {
+  const [nameInput, setName] = useState(name);
+  const [deadlineInput, setDeadline] = useState(deadline);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // ✅ Convert to backend format: "YYYY-MM-DD HH:mm:ss"
-    const formattedDeadline = deadline.format("YYYY-MM-DD HH:mm:ss");
-
-    const payload = {
-      name,
-      deadline: formattedDeadline,
-    };
-
-    console.log("Submitting:", payload);
-
-    const res = await fetch("http://localhost:3000/countdowns", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (res.ok) {
-      alert("Countdown created!");
-    } else {
-      alert("Error creating countdown");
-    }
+    const formattedDeadline = dayjs(deadlineInput).format("YYYY-MM-DD");
+    onSubmit({ name: nameInput, deadline: dayjs(formattedDeadline) });
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <form onSubmit={handleSubmit}>
-        <Stack spacing={2} sx={{ maxWidth: 300 }}>
-          <TextField
-            label="Countdown Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-                  <DateTimePicker
-                    
-            label="Select Deadline"
-            value={deadline}
-            onChange={(newValue) => setDeadline(newValue)}
-            ampm={false} // 24-hour format
-            renderInput={(params) => <TextField {...params} />}
-          />
-          <Button type="submit" variant="contained">
-            Create Countdown
-          </Button>
-        </Stack>
-      </form>
-    </LocalizationProvider>
+    <form onSubmit={handleSubmit}>
+      <input value={nameInput} onChange={(e) => setName(e.target.value)} />
+      <input
+        value={deadlineInput.format("YYYY-MM-DD HH:mm:ss")}
+        onChange={(newValue) => setDeadline(dayjs(newValue))}
+      />
+      <button type="submit">Submit</button>
+    </form>
   );
 }
